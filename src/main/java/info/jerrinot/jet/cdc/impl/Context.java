@@ -58,15 +58,18 @@ public final class Context {
                 .with(Constants.JOB_ID_KEY, uuid)
                 .with("connector.class", connectorClassname)
                 .with("offset.storage", SillyOffsetBackingStore.class.getName())
-                .with("offset.storage.file.filename",
-                        "/home/jara/tmp/deb/offset.dat")
 
+                // todo - externalize
                 .with("name", "my-sql-connector")
                 .with("database.hostname", host)
                 .with("database.port", port)
                 .with("database.user", username)
                 .with("database.password", password)
+
+                // todo - externalize
                 .with("database.server.id", 85744)
+
+                // todo - externalize
                 .with("database.server.name", "my-app-connector")
                 .with("database.history", SillyDatabaseHistory.class.getName())
                 .build();
