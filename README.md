@@ -20,3 +20,7 @@ Toying with Change Data Capture and Hazelcast Jet. Everything is in progress.
 - Start `Main` class
 
 Docker starts MySQL Adminer at http://localhost:8080/ - add a new database, add a table, new rows and watch for Jet job output. 
+
+It uses Debezium EmbeddedEngine. It does not use Kafka Broker nor Kafka Connect. However Kafka Connect classes still have to be present on a classpath as Debezium uses them internal, for example for schema definition, etc. 
+
+There is a basic support for fault tolerance - Debezium state is stored as a Jet Source state. Developed and tested on MySQL, but after small modification it should work with other Debezium connectors too.
