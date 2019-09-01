@@ -67,6 +67,7 @@ public final class Context {
                 .with("database.user", username)
                 .with("database.password", password)
                 .with("tombstones.on.delete", false)
+                .with("include.schema.changes", false)
 
                 // todo - externalize
                 .with("database.server.id", 85744)
@@ -91,9 +92,6 @@ public final class Context {
 
         Object item;
         while ((item = eventQueue.poll()) != null) {
-            if (UglyHacks.shouldSkipMessage(item)) {
-                continue;
-            }
             if (item instanceof SourceRecord) {
                 SourceRecord sourceRecord = (SourceRecord) item;
                 Struct value = (Struct) sourceRecord.value();
