@@ -66,6 +66,7 @@ public final class Context {
                 .with("database.port", port)
                 .with("database.user", username)
                 .with("database.password", password)
+                .with("tombstones.on.delete", false)
 
                 // todo - externalize
                 .with("database.server.id", 85744)
