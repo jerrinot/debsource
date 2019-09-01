@@ -10,7 +10,9 @@
 
     <properties>
         <debezium.version>0.9.5.Final</debezium.version>
-        <hazelcast.version>3.1</hazelcast.version>
+        <jet.version>3.1</jet.version>
+        <testcontainers.version>1.12.0</testcontainers.version>
+        <junit.version>4.12</junit.version>
     </properties>
 
     <dependencies>
@@ -29,7 +31,28 @@
         <dependency>
             <groupId>com.hazelcast.jet</groupId>
             <artifactId>hazelcast-jet-enterprise</artifactId>
-            <version>${hazelcast.version}</version>
+            <version>${jet.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mysql</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
