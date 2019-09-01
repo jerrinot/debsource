@@ -15,6 +15,7 @@ import org.apache.kafka.connect.json.JsonConverter;
 import org.apache.kafka.connect.source.SourceRecord;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -48,9 +49,9 @@ public final class Context {
         this.uuid = UuidUtil.newSecureUuidString();
         SillyRouter.registerContext(uuid, this);
 
-        Map<String, String> jsonConvertorConfig = Map.of(
-                "converter.type", "value",
-                "schemas.enable", "false");
+        Map<String, String> jsonConvertorConfig = new HashMap<>();
+        jsonConvertorConfig.put("converter.type", "value");
+        jsonConvertorConfig.put("schemas.enable", "false");
         jsonConverter.configure(jsonConvertorConfig);
 
         Configuration config = Configuration.create()
