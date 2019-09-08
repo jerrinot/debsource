@@ -56,21 +56,11 @@ public final class JdbcTemplate implements AutoCloseable {
     }
 
     public int newDatabase(String name) {
-        Statement stmt = null;
-        try {
-            stmt = connection.createStatement();
-            return stmt.executeUpdate("CREATE DATABASE " + name);
-        } catch (SQLException e) {
-            throw new AssertionError(e);
-        } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+        return executeUpdate("create database " + name);
+    }
+
+    public int dropDatabase(String name) {
+        return executeUpdate("drop database " + name);
     }
 
     @Override
