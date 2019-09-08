@@ -42,6 +42,7 @@ public class SillyTest {
     private static final File HOT_RESTART_BASE = new File(System.getProperty("java.io.tmpdir"));
     private static final String HOT_RESTART_DIR_NAME = "hot-restart";
     private JdbcTemplate jdbcTemplate;
+    private static final String COUNTER_NAME = "counter";
 
     @Rule
     public GenericContainer container = new GenericContainer("mysql:8.0.17")
@@ -79,7 +80,7 @@ public class SillyTest {
                         .password(DB_PASSWORD)
                         .build())
                 .withNativeTimestamps(ALLOWED_LAG)
-                .apply(incrementCounter("counter"))
+                .apply(incrementCounter(COUNTER_NAME))
                 .peek()
                 .drainTo(assertCollectedEventually(30, SillyTest::assertAllUpdatesCollected));
 
@@ -95,13 +96,17 @@ public class SillyTest {
 
         // wait for first 2 inserts to be captured by Debezium
         // otherwise the initial mysql data snapshot might include deletes and updates from bellow
-        IAtomicLong counter = jetInstance.getHazelcastInstance().getAtomicLong("counter");
-        Assertions.assertEqualsEventually(2, counter);
+        waitForInitialInserts(jetInstance);
 
         jdbcTemplate.executeUpdate("delete from users where id = ?", 0);
         jdbcTemplate.executeUpdate("update users set firstname = ?, lastname = ? where id = ?", "Ford", "Prefect", 42);
 
         Assertions.assertPipelineCompletion(job);
+    }
+
+    private void waitForInitialInserts(JetInstance jetInstance) {
+        IAtomicLong counter = jetInstance.getHazelcastInstance().getAtomicLong(COUNTER_NAME);
+        Assertions.assertEqualsEventually(2, counter);
     }
 
     private static void assertAllUpdatesCollected(List<String> received) {
