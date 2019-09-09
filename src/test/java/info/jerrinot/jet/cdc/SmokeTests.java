@@ -112,11 +112,6 @@ public class SmokeTests {
         Assertions.assertPipelineCompletion(job);
     }
 
-    private void waitForInitialInserts(JetInstance jetInstance) {
-        IAtomicLong counter = jetInstance.getHazelcastInstance().getAtomicLong(COUNTER_NAME);
-        Assertions.assertEqualsEventually(2, counter);
-    }
-
     private static void assertAllUpdatesCollected(List<String> received) {
         assertEquals(4, received.size());
         String item = received.get(0);
