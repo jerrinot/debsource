@@ -28,11 +28,6 @@ import java.util.function.Consumer;
 import static com.hazelcast.jet.datamodel.Tuple2.tuple2;
 
 public final class Context {
-    static {
-        UglyHacks.addJobIdFieldIntoEmbeddedConfig();
-    }
-
-
     private OffsetSnapshot latestOfferedSnapshot;
     private OffsetSnapshot latestCompletedSnapshot;
 
