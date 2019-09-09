@@ -26,7 +26,7 @@ import static info.jerrinot.jet.cdc.support.PipelineSupport.incrementCounter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class SillyTest {
+public class SmokeTests {
     private static final String SOURCE_NAME = "mysqlSource";
     private static final String JOB_NAME = "read from mysql";
 
@@ -82,7 +82,7 @@ public class SillyTest {
                 .withNativeTimestamps(ALLOWED_LAG)
                 .apply(incrementCounter(COUNTER_NAME))
                 .peek()
-                .drainTo(assertCollectedEventually(30, SillyTest::assertAllUpdatesCollected));
+                .drainTo(assertCollectedEventually(30, SmokeTests::assertAllUpdatesCollected));
 
         JobConfig jobConfig = new JobConfig()
                 .setName(JOB_NAME)
@@ -94,11 +94,19 @@ public class SillyTest {
         jdbcTemplate.executeUpdate("insert into users (id, firstname, lastname) values (0, 'Joe', 'Plumber')");
         jdbcTemplate.executeUpdate("insert into users (id, firstname, lastname) values (42, 'Arthur', 'Dent')");
 
+        IAtomicLong counter = jetInstance.getHazelcastInstance().getAtomicLong(COUNTER_NAME);
         // wait for first 2 inserts to be captured by Debezium
         // otherwise the initial mysql data snapshot might include deletes and updates from bellow
-        waitForInitialInserts(jetInstance);
+        Assertions.assertEqualsEventually(2, counter);
 
         jdbcTemplate.executeUpdate("delete from users where id = ?", 0);
+
+        // I am not sure why this waiting is needed. at this point snapshot should be finished
+        // and I should be receiving events in the same order as they are written into a transaction log
+        // yet without this barrier I occasionally observe the DELETE and UPDATE events to be
+        // re-ordered. I need to explore Debezium/mysql log reader to discover the root cause.
+        // For now the barrier will do it.
+        Assertions.assertEqualsEventually(3, counter);
         jdbcTemplate.executeUpdate("update users set firstname = ?, lastname = ? where id = ?", "Ford", "Prefect", 42);
 
         Assertions.assertPipelineCompletion(job);

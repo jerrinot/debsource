@@ -11,13 +11,14 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public final class Assertions {
+    private static final int DEFAULT_TIMEOUT_SECONDS = 20;
+
     private Assertions() {
 
     }
 
     public static void assertEqualsEventually(long expected, IAtomicLong atomicLong) {
-        int timeoutSeconds = 20;
-        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(timeoutSeconds);
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(DEFAULT_TIMEOUT_SECONDS);
         while (System.nanoTime() <= deadline) {
             long currentValue = atomicLong.get();
             if (expected == currentValue) {
@@ -31,7 +32,7 @@ public final class Assertions {
             }
         }
         throw new AssertionError(atomicLong + " wasn't set to " + expected + " within timeout of "
-                + timeoutSeconds + " seconds");
+                + DEFAULT_TIMEOUT_SECONDS + " seconds");
     }
 
     public static void assertPipelineCompletion(Job job) {
