@@ -26,6 +26,8 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import static com.hazelcast.jet.datamodel.Tuple2.tuple2;
+import static io.debezium.connector.mysql.MySqlConnectorConfig.DATABASE_BLACKLIST;
+import static io.debezium.connector.mysql.MySqlConnectorConfig.DATABASE_WHITELIST;
 
 public final class Context {
     private OffsetSnapshot latestOfferedSnapshot;
@@ -40,7 +42,7 @@ public final class Context {
     private final DocumentWriter writer = DocumentWriter.defaultWriter();
     private final DocumentReader reader = DocumentReader.defaultReader();
 
-    public Context(String connectorClassname, String host, int port, String username, String password) {
+    public Context(String connectorClassname, String host, int port, String username, String password, List<String> whitelist, List<String> blacklist) {
         this.uuid = UuidUtil.newSecureUuidString();
         SillyRouter.registerContext(uuid, this);
 
@@ -49,7 +51,7 @@ public final class Context {
         jsonConvertorConfig.put("schemas.enable", "false");
         jsonConverter.configure(jsonConvertorConfig);
 
-        Configuration config = Configuration.create()
+        Configuration.Builder configBuilder = Configuration.create()
                 .with(Constants.HISTORY_JOB_ID_KEY, uuid)
                 .with(Constants.JOB_ID_KEY, uuid)
                 .with("connector.class", connectorClassname)
@@ -66,11 +68,22 @@ public final class Context {
 
                 // todo - externalize
                 .with("database.server.name", "my-app-connector")
-                .with("database.history", SillyDatabaseHistory.class.getName())
-                .build();
+                .with("database.history", SillyDatabaseHistory.class.getName());
+
+        if (whitelist != null) {
+            configBuilder.with(DATABASE_WHITELIST, StringUtils.toCommaSeparated(whitelist));
+        } else if (blacklist != null) {
+            configBuilder.with(DATABASE_BLACKLIST, StringUtils.toCommaSeparated(blacklist));
+        }
+        Configuration config = configBuilder.build();
 
         engine = EmbeddedEngine.create()
                 .using(config)
+                // we wants to Debezium to always notify Jet source
+                // about current offset. Jet has its own configuration
+                // for snapshot frequency.
+                // performance and correctness implications are yet to be
+                // explored. 
                 .using(OffsetCommitPolicy.always())
                 .notifying(eventQueue::offer)
                 .build();
