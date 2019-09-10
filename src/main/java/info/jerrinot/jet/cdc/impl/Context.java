@@ -65,9 +65,6 @@ public final class Context {
                 .with("include.schema.changes", false)
 
                 // todo - externalize
-                .with("database.server.id", 85744)
-
-                // todo - externalize
                 .with("database.server.name", "my-app-connector")
                 .with("database.history", SillyDatabaseHistory.class.getName())
                 .build();
