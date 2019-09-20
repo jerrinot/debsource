@@ -4,9 +4,6 @@ import com.hazelcast.jet.core.Processor;
 import com.hazelcast.jet.pipeline.SourceBuilder;
 import com.hazelcast.jet.pipeline.SourceBuilder.TimestampedSourceBuffer;
 import com.hazelcast.jet.pipeline.StreamSource;
-import io.debezium.relational.history.AbstractDatabaseHistory;
-import io.debezium.relational.history.DatabaseHistoryException;
-import io.debezium.relational.history.HistoryRecord;
 import org.apache.kafka.connect.connector.ConnectorContext;
 import org.apache.kafka.connect.source.SourceConnector;
 import org.apache.kafka.connect.source.SourceRecord;
@@ -19,7 +16,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import static com.hazelcast.util.ExceptionUtil.rethrow;
 
@@ -31,7 +27,6 @@ public final class KafkaConnectSource {
 
     public static StreamSource<SourceRecord> kafkaConnectStream(Map<String, String> config) {
         String name = config.get("name");
-        config.put("database.history", DBHistory.class.getName());
         return SourceBuilder.timestampedStream(name, ctx -> new Context(ctx, config))
                             .fillBufferFn(Context::fillBuffer)
                             .createSnapshotFn(Context::createSnapshot)
@@ -145,22 +140,4 @@ public final class KafkaConnectSource {
         }
     }
 
-    //TODO, what is this useful for?
-    public static class DBHistory extends AbstractDatabaseHistory {
-
-        @Override
-        protected void storeRecord(HistoryRecord historyRecord) throws DatabaseHistoryException {
-            System.out.println("storeHistoryRecord: " + historyRecord);
-        }
-
-        @Override
-        protected void recoverRecords(Consumer<HistoryRecord> consumer) {
-            System.out.println("recoverRecords:");
-        }
-
-        @Override
-        public boolean exists() {
-            return true;
-        }
-    }
 }

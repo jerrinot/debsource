@@ -35,7 +35,7 @@ public class KafkaConnectTest {
             .with("database.whitelist", "inventory")
             .with("database.server.id", 184054)
             .with("database.server.name", "my-inventory-connector")
-            .with("database.history", KafkaConnectSource.DBHistory.class.getName())
+            .with("database.history", DBHistory.class.getName())
             .build();
 
     @Test
