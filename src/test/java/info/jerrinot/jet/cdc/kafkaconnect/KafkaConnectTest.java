@@ -2,6 +2,9 @@ package info.jerrinot.jet.cdc.kafkaconnect;
 
 import com.hazelcast.jet.Jet;
 import com.hazelcast.jet.JetInstance;
+import com.hazelcast.jet.Job;
+import com.hazelcast.jet.config.JobConfig;
+import com.hazelcast.jet.config.ProcessingGuarantee;
 import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.Sinks;
 import io.debezium.config.Configuration;
@@ -35,11 +38,14 @@ public class KafkaConnectTest {
             .with("database.whitelist", "inventory")
             .with("database.server.id", 184054)
             .with("database.server.name", "my-inventory-connector")
-            .with("database.history", DBHistory.class.getName())
+            .with("database.history", HazelcastDatabaseHistory.class.getName())
+            .with("database.history.hazelcast.hosts", "localhost:5701")
+            .with("database.history.hazelcast.group", "jet")
+            .with("database.history.hazelcast.list-name", "inventory-connector")
             .build();
 
     @Test
-    public void testWithJet() {
+    public void testWithJet() throws InterruptedException {
         System.setProperty("hazelcast.logging.type", "slf4j");
         JetInstance jet = Jet.newJetInstance();
 
@@ -48,7 +54,13 @@ public class KafkaConnectTest {
          .withNativeTimestamps(0)
          .drainTo(Sinks.logger());
 
-        jet.newJob(p).join();
+        Job job = jet.newJob(p, new JobConfig().setProcessingGuarantee(ProcessingGuarantee.EXACTLY_ONCE));
+
+        Thread.sleep(5_000);
+
+        job.restart();
+
+        job.join();
     }
 
     @Test
@@ -104,7 +116,6 @@ public class KafkaConnectTest {
             if (records != null) {
                 System.out.println("Returned " + records.size());
                 records.forEach(r -> {
-
                     System.out.println("Offset=" + r.sourceOffset());
                     System.out.println("Key=" + r.key());
                     System.out.println("Value=" + r.value());

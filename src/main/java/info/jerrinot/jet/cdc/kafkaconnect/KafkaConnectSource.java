@@ -41,7 +41,9 @@ public final class KafkaConnectSource {
         private final SourceTask task;
         private final Map<String, String> taskConfig;
 
+        private Map<Map<String, ?>, Map<String, ?>> partitionsToOffset = new HashMap<>();
         private boolean taskInit = false;
+
 
         public Context(Processor.Context ctx, Map<String, String> config) {
             try {
@@ -74,6 +76,7 @@ public final class KafkaConnectSource {
                     long ts = record.timestamp() == null ?  0 :
                             record.timestamp();
                     buf.add(record, ts);
+                    partitionsToOffset.put(record.sourcePartition(), record.sourceOffset());
                 }
             } catch (InterruptedException e) {
                 throw rethrow(e);
@@ -88,12 +91,12 @@ public final class KafkaConnectSource {
             }
         }
 
-        public Object createSnapshot() {
-            return null;
+        public Map<Map<String, ?>, Map<String, ?>> createSnapshot() {
+            return partitionsToOffset;
         }
 
-        public void restoreSnapshot(List<Object> snapshots) {
-
+        public void restoreSnapshot(List<Map<Map<String, ?>, Map<String, ?>>> snapshots) {
+            this.partitionsToOffset = snapshots.get(0);
         }
 
         private static class JetConnectorContext implements ConnectorContext {
@@ -120,8 +123,8 @@ public final class KafkaConnectSource {
             public <T> Map<Map<String, T>, Map<String, Object>> offsets(Collection<Map<String, T>> partitions) {
                 Map<Map<String, T>, Map<String, Object>> map = new HashMap<>();
                 for (Map<String, T> partition : partitions) {
-                    //TODO, these should be saved / restored from snapshot
-                    map.put(partition, null);
+                    Map<String, Object> offset = (Map<String, Object>) partitionsToOffset.get(partition);
+                    map.put(partition, offset);
                 }
                 return map;
             }
